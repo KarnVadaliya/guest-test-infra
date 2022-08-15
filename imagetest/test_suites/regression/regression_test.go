@@ -25,8 +25,8 @@ const (
 	GUESTSCRIPTS_SERVICE     = "google-startup-scripts.service"
 )
 
-// TestKernelStart test
-func TestKernelStart(t *testing.T) {
+// TestBootTime test
+func TestBootTime(t *testing.T) {
 
 	d, _ := os.Open("/proc")
 	defer d.Close()
