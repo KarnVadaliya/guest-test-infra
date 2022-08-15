@@ -4,9 +4,9 @@ package regression
 
 import (
 	"fmt"
-	"github.com/GoogleCloudPlatform/guest-test-infra/imagetest/utils"
+	"io"
+	"os"
 	"os/exec"
-	"regexp"
 	"strconv"
 	"strings"
 	"testing"
@@ -27,126 +27,79 @@ const (
 
 // TestKernelStart test
 func TestKernelStart(t *testing.T) {
-	cmd1 := exec.Command("cat", "/proc/uptime")
-	out1, err := cmd1.Output()
-	if err != nil {
-		t.Fatalf("cat command failed %v", err)
-	}
-	cmd2 := exec.Command("date", "+%s.%N")
-	out2, err := cmd2.Output()
-	if err != nil {
-		t.Fatalf("date command failed %v", err)
-	}
-	uptime_epoc := strconv.ParseFloat(string(out2), 64) - strconv.ParseFloat(strings.Split(string(out1), " ")[0], 64)
 
-}
+	d, _ := os.Open("/proc")
+	defer d.Close()
 
-func TestKernelFinish(t *testing.T) {
-	cmd := exec.Command("systemd-analyze")
-	out, err := cmd.Output()
-	if err != nil {
-		t.Fatalf("systemd-analyze command failed %v", err)
-	}
-	kernel_time, _ := ParseKernelUserTimes(string(out))
-	if kernel_time == 0.0 {
-		t.Fatalf("Error parsing kernel time")
-	}
-}
+	f1 := false
+	f2 := false
 
-func TestNetworkReady(t *testing.T) {
-	cmd := exec.Command("systemd-analyze", "critical-chain", NETWORK_TARGET)
-	out, err := cmd.Output()
-	if err != nil {
-		t.Fatalf("systemd-analyze command failed %v", err)
-	}
-	network_time, err := ParseSystemDCriticalChainOutput(string(out))
-	if err != nil {
-		t.Fatalf("systemd-analyze command failed %v", err)
-	}
-}
-
-func ParseKernelUserTimes(str string) (float64, float64, error) {
-	kernel_time := 0.0
-	user_time := 0.0
-	kernelRegex, _ = regexp.Complile(PATTERN_KERNEL_TIME)
-	userRegex, _ = regexp.Complile(PATTERN_USER_TIME)
-	matchedKernel := kernelRegex.MatchString(str)
-	matchedUser := userRegex.MatchString(str)
-	if matchedKernel {
-		kernel_time, err := ParseSeconds(kernelRegex.FindString(str)[4:])
-		if err != nil {
-			return nil, nil, err
+	for {
+		fmt.Println("Inside first loop")
+		names, err := d.Readdirnames(0)
+		if err == io.EOF {
+			fmt.Printf("Error EOF is %v\n", err)
+			break
 		}
-	}
-	if matchedUser {
-		user_time, err := ParseSeconds(userRegex.FindString(str)[3:])
-		if err != nil {
-			return nil, nil, err
-		}
-	}
-	return kernel_time, user_time, nil
-}
-
-func ParseSeconds(str string) (float64, error) {
-	formattedStr := strings.Trim(str, " ")
-	secs := 0.0
-	for _, element := range strings.Split(formattedStr, " ") {
-		if strings.HasSuffix(element, "min") {
-			value, _ := strconv.ParseFloat(element[0:len(element)-3], 64)
-			secs += (value * 60.00)
-		} else if strings.HasSuffix(element, "ms") {
-			value, _ := strconv.ParseFloat(element[0:len(element)-2], 64)
-			secs += (value / 1000)
-		} else if strings.HasSuffix(element, "s") {
-			value, _ := strconv.ParseFloat(element[0:len(element)-1], 64)
-			secs += value
-		} else {
-			return nil, fmt.Errorf("error parsing seconds in %s", str)
-		}
-	}
-	return secs, nil
-}
-
-func ParseSystemDCriticalChainOutput(str string) (float64, error) {
-	lines := strings.Split(str, "\n")
-	if len(lines) < 5 {
-		return nil, fmt.Errorf("Invalid format. Critical chain command: %s", str)
-	}
-
-	systemdLine1Regex, _ := regexp.Complile(PATTERN_SYSTEMD_CP_LINE1)
-	systemdLine2Regex, _ := regexp.Complile(PATTERN_SYSTEMD_CP_LINE2)
-
-	firstLine := lines[3]
-	secondLine := lines[4]
-	totalSecs := 0.0
-	foundValue := false
-
-	if strings.Contains(firstLine, "+") {
-		boolmatch := systemdLine1Regex.MatchString(firstLine)
-		if boolmatch {
-			match := systemdLine1Regex.FindString(firstLine)[1:]
-			secs, err := ParseSeconds(match)
-			if err != nil {
-				return nil, err
+		for _, name := range names {
+			if name[0] < '0' || name[0] > '9' {
+				continue
 			}
-			totalSecs += secs
-			foundValue = true
+			intnum, err := strconv.ParseInt(name, 10, 0)
+			if err != nil {
+				continue
+			}
+			fmt.Printf("The number is %v\n", intnum)
+
+			x := "/proc/" + name + "/comm"
+			dat, err := os.ReadFile(x)
+			if err != nil {
+				fmt.Printf("Read File Error is %v\n", err)
+			}
+			if f1 {
+				fmt.Printf("The guest is present checking for %s and  %s\n", x, string(dat))
+				n1 := strings.Trim(string(dat), "\n")
+				if n1 == "sshd" {
+					fmt.Printf("Inside SSH %s", string(dat))
+					a1 := strings.Trim(string(name), "\n")
+					x1 := "/proc/" + a1 + "/status"
+					dat2, err := os.ReadFile(x1)
+					if err != nil {
+						fmt.Printf("Guest Error is %v\n", err)
+					}
+					fmt.Printf("The ssh is %s and %s\n", x1, string(dat2))
+					f2 = true
+					break
+				}
+			}
+			fmt.Printf("The guest is not present checking for it %s and  %s\n", x, string(dat))
+			n2 := strings.Trim(string(dat), "\n")
+			if n2 == "google_guest_ag" {
+				fmt.Printf("Inside Guest %s", string(dat))
+				a1 := strings.Trim(string(name), "\n")
+				x1 := "/proc/" + a1 + "/status"
+				dat2, err := os.ReadFile(x1)
+				if err != nil {
+					fmt.Printf("Guest Error is %v\n", err)
+				}
+				fmt.Printf("The guest is %s and %s\n", x1, string(dat2))
+				f1 = true
+			}
 		}
-	} else {
-		secondLine = firstLine
-	}
-	boolmatch := systemdLine2Regex.MatchString(secondLine)
-	if boolmatch {
-		match := systemdLine2Regex.FindString(secondLine)[1:]
-		secs, err := ParseSeconds(match)
-		if err != nil {
-			return nil, err
+		if f1 && f2 {
+			t2 := time.Now()
+			fmt.Printf("Time is %s\n", t2.String())
+
+			cmdx := exec.Command("cat", "/proc/uptime")
+			outx, err := cmdx.Output()
+			if err != nil {
+				fmt.Printf("Uptime Error is %v\n", err)
+			}
+			fmt.Printf("The date is %s\n", string(outx))
+
+			t3 := time.Now()
+			fmt.Printf("Time is %s\n", t3.String())
+			break
 		}
-		totalSecs += secs
-		foundValue = true
 	}
-	if !foundValue {
-		return nil, fmt.Errorf("Invalid format. Critical chain command: %s", str)
-	}
-	return totalSecs, nil
 }

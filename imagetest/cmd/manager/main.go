@@ -12,14 +12,16 @@ import (
 
 	"cloud.google.com/go/storage"
 	"github.com/GoogleCloudPlatform/guest-test-infra/imagetest"
-	"github.com/GoogleCloudPlatform/guest-test-infra/imagetest/test_suites/disk"
-	imageboot "github.com/GoogleCloudPlatform/guest-test-infra/imagetest/test_suites/image_boot"
-	imagevalidation "github.com/GoogleCloudPlatform/guest-test-infra/imagetest/test_suites/image_validation"
-	"github.com/GoogleCloudPlatform/guest-test-infra/imagetest/test_suites/metadata"
-	"github.com/GoogleCloudPlatform/guest-test-infra/imagetest/test_suites/network"
-	"github.com/GoogleCloudPlatform/guest-test-infra/imagetest/test_suites/oslogin"
-	"github.com/GoogleCloudPlatform/guest-test-infra/imagetest/test_suites/security"
-	"github.com/GoogleCloudPlatform/guest-test-infra/imagetest/test_suites/ssh"
+
+	//"github.com/GoogleCloudPlatform/guest-test-infra/imagetest/test_suites/disk"
+	//imageboot "github.com/GoogleCloudPlatform/guest-test-infra/imagetest/test_suites/image_boot"
+	//imagevalidation "github.com/GoogleCloudPlatform/guest-test-infra/imagetest/test_suites/image_validation"
+	//"github.com/GoogleCloudPlatform/guest-test-infra/imagetest/test_suites/metadata"
+	//"github.com/GoogleCloudPlatform/guest-test-infra/imagetest/test_suites/network"
+	//"github.com/GoogleCloudPlatform/guest-test-infra/imagetest/test_suites/oslogin"
+	//"github.com/GoogleCloudPlatform/guest-test-infra/imagetest/test_suites/security"
+	//"github.com/GoogleCloudPlatform/guest-test-infra/imagetest/test_suites/ssh"
+	"github.com/GoogleCloudPlatform/guest-test-infra/imagetest/test_suites/regression"
 )
 
 var (
@@ -139,37 +141,43 @@ func main() {
 		name      string
 		setupFunc func(*imagetest.TestWorkflow) error
 	}{
+		/*
+			{
+				imagevalidation.Name,
+				imagevalidation.TestSetup,
+			},
+			{
+				imageboot.Name,
+				imageboot.TestSetup,
+			},
+			{
+				network.Name,
+				network.TestSetup,
+			},
+			{
+				security.Name,
+				security.TestSetup,
+			},
+			{
+				disk.Name,
+				disk.TestSetup,
+			},
+			{
+				ssh.Name,
+				ssh.TestSetup,
+			},
+			{
+				metadata.Name,
+				metadata.TestSetup,
+			},
+			{
+				oslogin.Name,
+				oslogin.TestSetup,
+			},
+		*/
 		{
-			imagevalidation.Name,
-			imagevalidation.TestSetup,
-		},
-		{
-			imageboot.Name,
-			imageboot.TestSetup,
-		},
-		{
-			network.Name,
-			network.TestSetup,
-		},
-		{
-			security.Name,
-			security.TestSetup,
-		},
-		{
-			disk.Name,
-			disk.TestSetup,
-		},
-		{
-			ssh.Name,
-			ssh.TestSetup,
-		},
-		{
-			metadata.Name,
-			metadata.TestSetup,
-		},
-		{
-			oslogin.Name,
-			oslogin.TestSetup,
+			regression.Name,
+			regression.TestSetup,
 		},
 	}
 
