@@ -13,6 +13,6 @@ func TestSetup(t *imagetest.TestWorkflow) error {
 	if err != nil {
 		return err
 	}
-	vm1.RunTests("TestKernelStart")
+	vm1.RunTests("TestBootTime")
 	return nil
 }
