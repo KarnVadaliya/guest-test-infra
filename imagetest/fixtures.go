@@ -243,7 +243,6 @@ func (t *TestVM) EnableSecureBoot() {
 // ChangeNicTypeToGVNIC changes the type of vNIC to be used to GVNIC
 func (t *TestVM) ChangeNicTypeToGVNIC() {
 	if t.instance.NetworkInterfaces == nil {
-		fmt.Println("Inside condition 1")
 		t.instance.NetworkInterfaces = []*compute.NetworkInterface{
 			&compute.NetworkInterface{
 				NicType: "GVNIC",
